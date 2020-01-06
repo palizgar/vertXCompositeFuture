@@ -12,10 +12,6 @@ public class WebResource {
     return this.url;
   }
 
-  public void setUrl(String url) {
-    this.url = url;
-  }
-
   public int getBodySize() {
     return this.bodySize;
   }

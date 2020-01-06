@@ -19,7 +19,6 @@ public class HttpClientVerticle extends AbstractVerticle {
 
   @Override
   public void start(Promise<Void> promise) throws Exception {
-
     //  url: the endpoint to which we send the request
     String url = webResource.getUrl();
 
@@ -34,30 +33,26 @@ public class HttpClientVerticle extends AbstractVerticle {
 
     //  sending request to url
     request.send(
-        httpResponseAsyncResult -> {
+        result -> {
 
           //  CASE 1: received the response successfully
-
-          if (httpResponseAsyncResult.succeeded()) {
+          if (result.succeeded()) {
 
             //  calculating the fetch duration (the time frame between sending a request and
             // receiving its response)
             fetchDurationInMilliseconds = System.currentTimeMillis() - startTime;
 
             //  register the response object
-            httpResponse = httpResponseAsyncResult.result();
+            httpResponse = result.result();
 
             //  associate response body size with webResource
             int size = httpResponse.body().getBytes().length;
             webResource.setBodySize(size);
 
-            //            System.out.println("promise completed successfully");
             promise.complete();
-
             //  CASE 2: no response is received
           } else {
-            //            System.out.println("failed to complete the promise");
-            promise.fail(httpResponseAsyncResult.cause());
+            promise.fail(result.cause());
           }
         });
     //  acknowledge the caller: 'future is completed (either successfully/failed )'
@@ -72,10 +67,6 @@ public class HttpClientVerticle extends AbstractVerticle {
 
   public WebResource getWebResource() {
     return this.webResource;
-  }
-
-  public void setWebResource(WebResource webResource) {
-    this.webResource = webResource;
   }
 
   public long getFetchDurationInMilliseconds() {
