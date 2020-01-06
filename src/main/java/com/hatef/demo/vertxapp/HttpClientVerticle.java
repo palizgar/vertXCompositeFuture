@@ -3,27 +3,22 @@ package com.hatef.demo.vertxapp;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
-import io.vertx.core.logging.Logger;
-import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.client.HttpRequest;
 import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
 public class HttpClientVerticle extends AbstractVerticle {
-  private static final Logger LOGGER = LoggerFactory.getLogger(HttpClientVerticle.class);
 
   private WebResource webResource;
   private HttpResponse<Buffer> httpResponse;
-  private long fetchDurationInMilliseconds;
-  private int size;
+  private long fetchDurationInMilliseconds = 0;
 
   public HttpClientVerticle(WebResource webResource) {
     this.webResource = webResource;
-    this.fetchDurationInMilliseconds = 0;
   }
 
   @Override
-  public void start(Promise<Void> promise) throws InterruptedException {
+  public void start(Promise<Void> promise) throws Exception {
 
     //  url: the endpoint to which we send the request
     String url = webResource.getUrl();
@@ -53,32 +48,19 @@ public class HttpClientVerticle extends AbstractVerticle {
             httpResponse = httpResponseAsyncResult.result();
 
             //  associate response body size with webResource
-            size = httpResponse.body().getBytes().length;
+            int size = httpResponse.body().getBytes().length;
             webResource.setBodySize(size);
 
-            LOGGER.info(
-                "+++ Fetch(SUCCESSFUL) for URL: "
-                    + webResource.getUrl()
-                    + "\n-Duration: "
-                    + fetchDurationInMilliseconds
-                    + " ms\n-STATUS: "
-                    + httpResponse.statusMessage()
-                    + "\n-BODY SIZE RECEIVED: "
-                    + size);
+            //            System.out.println("promise completed successfully");
+            promise.complete();
 
             //  CASE 2: no response is received
           } else {
-
-            //  fail the promise and report the cause
-            LOGGER.error(
-                "--- Fetch(FAILED) for URL: "
-                    + webResource.getUrl()
-                    + "\n"
-                    + httpResponseAsyncResult.cause());
+            //            System.out.println("failed to complete the promise");
+            promise.fail(httpResponseAsyncResult.cause());
           }
         });
     //  acknowledge the caller: 'future is completed (either successfully/failed )'
-    promise.complete();
   }
 
   // === === === === === === === === === === === === === ===
@@ -98,9 +80,5 @@ public class HttpClientVerticle extends AbstractVerticle {
 
   public long getFetchDurationInMilliseconds() {
     return this.fetchDurationInMilliseconds;
-  }
-
-  public int getSize() {
-    return size;
   }
 }
