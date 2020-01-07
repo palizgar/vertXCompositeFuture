@@ -8,7 +8,6 @@ import io.vertx.ext.web.client.HttpResponse;
 import io.vertx.ext.web.client.WebClient;
 
 public class HttpClientVerticle extends AbstractVerticle {
-
   private WebResource webResource;
   private HttpResponse<Buffer> httpResponse;
   private long fetchDurationInMilliseconds = 0;
@@ -52,7 +51,8 @@ public class HttpClientVerticle extends AbstractVerticle {
             promise.complete();
             //  CASE 2: no response is received
           } else {
-            promise.fail(result.cause());
+            promise.fail(result.cause() + ":");
+            System.out.println(result.cause().getMessage());
           }
         });
     //  acknowledge the caller: 'future is completed (either successfully/failed )'

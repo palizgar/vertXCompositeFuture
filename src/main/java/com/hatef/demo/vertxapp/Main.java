@@ -1,6 +1,5 @@
 package com.hatef.demo.vertxapp;
 
-import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
@@ -28,45 +27,63 @@ public class Main {
     Promise<HttpResponse<Buffer>> yahooPromise = Promise.promise();
     Promise<HttpResponse<Buffer>> msnPromise = Promise.promise();
 
+    deployHelper(googleClient, googlePromise);
+    deployHelper(yahooClient, yahooPromise);
+    deployHelper(msnClient, msnPromise);
+
+    // TODO: how to get totalSize after all deployments ???
+
     //  once promises are completed, the handler would be called
-    CompositeFuture.all(
-            deploy(googleClient, googlePromise),
-            deploy(yahooClient, yahooPromise),
-            deploy(msnClient, msnPromise))
+    /*    CompositeFuture.all(
+        deploy(googleClient, googlePromise),
+        deploy(yahooClient, yahooPromise),
+        deploy(msnClient, msnPromise))
+    .setHandler(
+        ar -> {
+          int totalSize = 0;
+          if (ar.succeeded()) {
+            System.out.println("\nPreparing Report...\n\n");
+
+            for (HttpClientVerticle v : verticleList) {
+              //  print out the result to the console
+
+              totalSize += v.getWebResource().getBodySize();
+              System.out.printf(
+                  "FETCH SUCCESS - URL: %s\nSTATUS CODE: %d\nFETCH DURATION: %d ms\nBODY SIZE: %d (bytes)%n",
+                  v.getWebResource().getUrl(),
+                  v.getHttpResponse().statusCode(),
+                  v.getFetchDurationInMilliseconds(),
+                  v.getWebResource().getBodySize());
+            }
+          } else {
+            System.out.println("ERROR in Composite Future");
+          }
+          System.out.println("\nTOTAL SIZE:" + totalSize + " (bytes)");
+        });*/
+  }
+
+  private static void deployHelper(
+      HttpClientVerticle httpClient, Promise<HttpResponse<Buffer>> httpPromise) {
+    deploy(httpClient, httpPromise)
         .setHandler(
             ar -> {
-              int totalSize = 0;
               if (ar.succeeded()) {
-                System.out.println("\nPreparing Report...\n\n");
 
-                for (HttpClientVerticle v : verticleList) {
-                  //  print out the result to the console
-
-                  totalSize += v.getWebResource().getBodySize();
-                  System.out.println(
-                      "FETCH SUCCESS - URL: "
-                          + v.getWebResource().getUrl()
-                          + "\n"
-                          + "STATUS CODE: "
-                          + v.getHttpResponse().statusCode()
-                          + "\n"
-                          + "FETCH DURATION(ms): "
-                          + v.getFetchDurationInMilliseconds()
-                          + "\n"
-                          + "BODY SIZE(bytes): "
-                          + v.getWebResource().getBodySize());
-                }
+                System.out.printf(
+                    "FETCH SUCCESS - URL: %s\nSTATUS CODE: %d\nFETCH DURATION: %d ms\nBODY SIZE: %d (bytes)%n",
+                    httpClient.getWebResource().getUrl(),
+                    httpClient.getHttpResponse().statusCode(),
+                    httpClient.getFetchDurationInMilliseconds(),
+                    httpClient.getWebResource().getBodySize());
               } else {
-                System.out.println("ERROR deploying CompositeFuture");
+                System.out.println(ar.cause());
               }
-              System.out.println("\nTOTAL SIZE: " + totalSize);
             });
   }
 
   //  deploy a verticle and return its future object
   private static Future<HttpResponse<Buffer>> deploy(
       HttpClientVerticle v, Promise<HttpResponse<Buffer>> promise) {
-    Promise promise1 = Promise.promise();
 
     vertx.deployVerticle(
         v,
